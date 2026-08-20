@@ -55,7 +55,7 @@ export class UsersController {
 
   @UseGuards(JwtGuard)
   @Get('me/wishes')
-  findOwnWishes(@Req() req: AuthenticatedRequest) {
+  async findOwnWishes(@Req() req: AuthenticatedRequest) {
     return this.wishesService.findWishesByOwnerId(req.user.id);
   }
 

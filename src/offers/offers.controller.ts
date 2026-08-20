@@ -24,17 +24,20 @@ export class OffersController {
   constructor(private readonly offersService: OffersService) {}
 
   @Get()
-  findAllOffers() {
+  async findAllOffers() {
     return this.offersService.findAllOffers();
   }
 
   @Get(':id')
-  findOneOffer(@Param('id', ParseIntPipe) id: number) {
+  async findOneOffer(@Param('id', ParseIntPipe) id: number) {
     return this.offersService.findOneOffer(id);
   }
 
   @Post()
-  createOffer(@Body() dto: CreateOfferDto, @Req() req: AuthenticatedRequest) {
+  async createOffer(
+    @Body() dto: CreateOfferDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
     const userId = req.user.id;
     return this.offersService.createOffer(dto, userId);
   }
