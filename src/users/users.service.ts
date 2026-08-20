@@ -27,23 +27,23 @@ export class UsersService {
     private readonly logger: Logger,
   ) {}
 
-  findUserByFilter(filter: Record<string, unknown>) {
+  async findUserByFilter(filter: Record<string, unknown>) {
     return this.userRepository.findOneBy(filter);
   }
 
-  findUserById(id: number) {
+  async findUserById(id: number) {
     return this.userRepository.findOneBy({ id });
   }
 
   // Универсальный поиск по нескольким условиям.
-  findMany(criteria: FindOptionsWhere<User>[]): Promise<User[]> {
+  async findMany(criteria: FindOptionsWhere<User>[]): Promise<User[]> {
     return this.userRepository.find({
       where: criteria,
     });
   }
 
   // Поиск по части username или email без учёта регистра.
-  findManyBySearch(query: string): Promise<User[]> {
+  async findManyBySearch(query: string): Promise<User[]> {
     const value = query.trim();
 
     return this.findMany([

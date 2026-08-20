@@ -21,36 +21,36 @@ export class WishesController {
   constructor(private readonly wishesService: WishesService) {}
 
   @Get('last')
-  findLast() {
+  async findLast() {
     return this.wishesService.findLast();
   }
 
   @Get('top')
-  findTop() {
+  async findTop() {
     return this.wishesService.findTop();
   }
 
   @UseGuards(JwtGuard)
   @Get(':id')
-  findWish(@Param('id', ParseIntPipe) id: number) {
+  async findWish(@Param('id', ParseIntPipe) id: number) {
     return this.wishesService.findWish(id);
   }
 
   @UseGuards(JwtGuard)
   @Post()
-  createWish(@Body() dto: CreateWishDto, @Req() req: { user: User }) {
+  async createWish(@Body() dto: CreateWishDto, @Req() req: { user: User }) {
     return this.wishesService.createWish(dto, req.user);
   }
 
   @UseGuards(JwtGuard)
   @Post(':id/copy')
-  copyWish(@Param('id', ParseIntPipe) id: number) {
+  async copyWish(@Param('id', ParseIntPipe) id: number) {
     return this.wishesService.getCopy(id);
   }
 
   @UseGuards(JwtGuard)
   @Patch(':id')
-  updateWish(
+  async updateWish(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateWishDto,
     @Req() req: { user: User },
@@ -60,7 +60,7 @@ export class WishesController {
 
   @UseGuards(JwtGuard)
   @Delete(':id')
-  removeWish(
+  async removeWish(
     @Param('id', ParseIntPipe) id: number,
     @Req() req: { user: User },
   ) {
