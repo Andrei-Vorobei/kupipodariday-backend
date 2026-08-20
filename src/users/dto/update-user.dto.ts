@@ -7,15 +7,15 @@ import {
   MinLength,
 } from 'class-validator';
 
-export class CreateUserDto {
+export class UpdateUserDto {
+  @IsOptional()
   @IsString()
   @MinLength(2)
   @MaxLength(30)
-  username: string;
+  username?: string;
 
   @IsOptional()
   @IsString()
-  @MinLength(0)
   @MaxLength(200)
   about?: string;
 
@@ -23,10 +23,12 @@ export class CreateUserDto {
   @IsUrl({ require_protocol: true })
   avatar?: string;
 
+  @IsOptional()
   @IsEmail()
-  email: string;
+  email?: string;
 
+  @IsOptional()
   @IsString()
   @MinLength(2)
-  password: string;
+  password?: string;
 }

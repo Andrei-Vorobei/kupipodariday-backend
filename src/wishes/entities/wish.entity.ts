@@ -1,19 +1,19 @@
 import {
-  Entity,
   Column,
-  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  Entity,
   ManyToOne,
   OneToMany,
-  CreateDateColumn,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import {
-  MinLength,
-  MaxLength,
+  IsNumber,
   IsString,
   IsUrl,
-  IsNumber,
+  MaxLength,
   Min,
+  MinLength,
 } from 'class-validator';
 import { User } from '../../users/entities/user.entity';
 import { Offer } from '../../offers/entities/offer.entity';
@@ -24,37 +24,55 @@ export class Wish {
   id: number;
 
   @Column({ length: 250 })
+  @IsString()
   @MinLength(1)
   @MaxLength(250)
-  @IsString()
   name: string;
+
+  @Column()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(250)
+  link: string;
 
   @Column({ length: 500 })
   @IsUrl({ require_protocol: true })
-  link: string;
+  image: string;
 
-  @Column({ nullable: true, length: 500 })
-  @IsUrl({ require_protocol: true, allow_relative: false })
-  image: string | null;
-
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => Number(value),
+    },
+  })
   @IsNumber()
-  @Min(0)
+  @Min(1)
   price: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    default: 0,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => Number(value),
+    },
+  })
   @IsNumber()
   @Min(0)
   raised: number;
 
-  @Column({ type: 'text', length: 1024 })
+  @Column({ type: 'text' })
+  @IsString()
   @MinLength(1)
   @MaxLength(1024)
-  @IsString()
   description: string;
 
-  @Column({ default: 0 })
-  @IsNumber()
+  @Column({ type: 'integer', default: 0 })
   copied: number;
 
   @CreateDateColumn()
@@ -63,7 +81,10 @@ export class Wish {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @ManyToOne(() => User, (user) => user.wishes, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.wishes, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
   owner: User;
 
   @OneToMany(() => Offer, (offer) => offer.item)

@@ -15,12 +15,15 @@ import {
 } from 'class-validator';
 import { Wish } from '../../wishes/entities/wish.entity';
 import { Offer } from '../../offers/entities/offer.entity';
-import { Wishlist } from 'src/wishlists/entities/wishlist.entity';
+import { Wishlist } from '../../wishlists/entities/wishlist.entity';
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @Column({ unique: true, nullable: true })
+  yandexId: string | null;
 
   @Column({ unique: true })
   @MinLength(2)
@@ -41,11 +44,11 @@ export class User {
   @IsUrl({ require_protocol: true })
   avatar: string;
 
-  @Column({ unique: true })
+  @Column({ unique: true, length: 255 })
   @IsEmail()
   email: string;
 
-  @Column()
+  @Column({ type: 'varchar' })
   password: string;
 
   @CreateDateColumn()

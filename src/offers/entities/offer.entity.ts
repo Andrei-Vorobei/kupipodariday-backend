@@ -1,12 +1,11 @@
 import {
-  Entity,
   Column,
-  PrimaryGeneratedColumn,
-  ManyToOne,
   CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { IsNumber, IsBoolean, Min } from 'class-validator';
 import { User } from '../../users/entities/user.entity';
 import { Wish } from '../../wishes/entities/wish.entity';
 
@@ -15,13 +14,18 @@ export class Offer {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
-  @IsNumber()
-  @Min(0)
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => Number(value),
+    },
+  })
   amount: number;
 
   @Column({ default: false })
-  @IsBoolean()
   hidden: boolean;
 
   @CreateDateColumn()
@@ -30,9 +34,15 @@ export class Offer {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @ManyToOne(() => User, (user) => user.offers, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.offers, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
   user: User;
 
-  @ManyToOne(() => Wish, (wish) => wish.offers, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Wish, (wish) => wish.offers, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
   item: Wish;
 }
