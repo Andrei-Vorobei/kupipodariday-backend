@@ -89,7 +89,7 @@ export class OffersService {
 
       const item = await wishRepository
         .createQueryBuilder('wish')
-        .leftJoinAndSelect('wish.owner', 'owner')
+        .innerJoinAndSelect('wish.owner', 'owner')
         .where('wish.id = :id', { id: dto.itemId })
         // Блокируем подарок до завершения транзакции,
         // чтобы параллельные offer не использовали старое значение raised.
