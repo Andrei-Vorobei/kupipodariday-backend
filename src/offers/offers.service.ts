@@ -26,8 +26,10 @@ export class OffersService {
     'item.offers.user',
   ];
 
-  private hidePrivateFields(offer: Offer): Offer {
-    if (offer.user) {
+  private hidePrivateFields(offer: Offer, viewerId?: number): Offer {
+    if (offer.user && offer.hidden && offer.user.id !== viewerId) {
+      offer.user = null as unknown as User;
+    } else if (offer.user) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, yandexId, email, ...publicUser } = offer.user;
       offer.user = publicUser as User;
@@ -41,7 +43,13 @@ export class OffersService {
     }
 
     for (const nestedOffer of offer.item?.offers ?? []) {
-      if (nestedOffer.user) {
+      if (
+        nestedOffer.user &&
+        nestedOffer.hidden &&
+        nestedOffer.user.id !== viewerId
+      ) {
+        nestedOffer.user = null as unknown as User;
+      } else if (nestedOffer.user) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { password, yandexId, email, ...publicUser } = nestedOffer.user;
 
@@ -52,15 +60,15 @@ export class OffersService {
     return offer;
   }
 
-  async findAllOffers(): Promise<Offer[]> {
+  async findAllOffers(viewerId?: number): Promise<Offer[]> {
     const offers = await this.offerRepository.find({
       relations: this.relations,
     });
 
-    return offers.map((offer) => this.hidePrivateFields(offer));
+    return offers.map((offer) => this.hidePrivateFields(offer, viewerId));
   }
 
-  async findOneOffer(id: number): Promise<Offer> {
+  async findOneOffer(id: number, viewerId?: number): Promise<Offer> {
     const offer = await this.offerRepository.findOne({
       where: { id },
       relations: this.relations,
@@ -70,7 +78,7 @@ export class OffersService {
       throw new NotFoundException('Offer не найден');
     }
 
-    return this.hidePrivateFields(offer);
+    return this.hidePrivateFields(offer, viewerId);
   }
 
   async createOffer(dto: CreateOfferDto, userId: number): Promise<Offer> {
@@ -159,6 +167,6 @@ export class OffersService {
       throw new NotFoundException('Созданный offer не найден');
     }
 
-    return this.hidePrivateFields(createdOffer);
+    return this.hidePrivateFields(createdOffer, userId);
   }
 }

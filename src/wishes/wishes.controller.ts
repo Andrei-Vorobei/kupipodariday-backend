@@ -32,8 +32,11 @@ export class WishesController {
 
   @UseGuards(JwtGuard)
   @Get(':id')
-  async findWish(@Param('id', ParseIntPipe) id: number) {
-    return this.wishesService.findWish(id);
+  async findWish(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: { user: User },
+  ) {
+    return this.wishesService.findWish(id, req.user.id);
   }
 
   @UseGuards(JwtGuard)
@@ -44,8 +47,11 @@ export class WishesController {
 
   @UseGuards(JwtGuard)
   @Post(':id/copy')
-  async copyWish(@Param('id', ParseIntPipe) id: number) {
-    return this.wishesService.getCopy(id);
+  async copyWish(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: { user: User },
+  ) {
+    return this.wishesService.getCopy(id, req.user);
   }
 
   @UseGuards(JwtGuard)

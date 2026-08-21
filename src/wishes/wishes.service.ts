@@ -22,7 +22,7 @@ export class WishesService {
 
   private readonly relations = ['owner', 'offers', 'offers.user'];
 
-  private hidePrivateFields(wish: Wish): Wish {
+  private hidePrivateFields(wish: Wish, viewerId?: number): Wish {
     if (wish.owner) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, yandexId, email, ...publicOwner } = wish.owner;
@@ -30,7 +30,9 @@ export class WishesService {
     }
 
     for (const offer of wish.offers ?? []) {
-      if (offer.user) {
+      if (offer.user && offer.hidden && offer.user.id !== viewerId) {
+        offer.user = null as unknown as User;
+      } else if (offer.user) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { password, yandexId, email, ...publicUser } = offer.user;
         offer.user = publicUser as typeof offer.user;
@@ -56,10 +58,10 @@ export class WishesService {
 
     const savedWish = await this.wishRepository.save(wish);
 
-    return this.findWish(savedWish.id);
+    return this.findWish(savedWish.id, user.id);
   }
 
-  async findWish(id: number): Promise<Wish> {
+  async findWish(id: number, viewerId?: number): Promise<Wish> {
     const wish = await this.wishRepository.findOne({
       where: { id },
       relations: this.relations,
@@ -69,10 +71,13 @@ export class WishesService {
       throw new NotFoundException(`Подарок с id ${id} не найден`);
     }
 
-    return this.hidePrivateFields(wish);
+    return this.hidePrivateFields(wish, viewerId);
   }
 
-  async findWishesByOwnerUsername(username: string): Promise<Wish[]> {
+  async findWishesByOwnerUsername(
+    username: string,
+    viewerId?: number,
+  ): Promise<Wish[]> {
     const wishes = await this.wishRepository.find({
       where: {
         owner: { username },
@@ -80,10 +85,13 @@ export class WishesService {
       relations: this.relations,
     });
 
-    return wishes.map((wish) => this.hidePrivateFields(wish));
+    return wishes.map((wish) => this.hidePrivateFields(wish, viewerId));
   }
 
-  async findWishesByOwnerId(ownerId: number): Promise<Wish[]> {
+  async findWishesByOwnerId(
+    ownerId: number,
+    viewerId?: number,
+  ): Promise<Wish[]> {
     const wishes = await this.wishRepository.find({
       where: {
         owner: { id: ownerId },
@@ -91,7 +99,7 @@ export class WishesService {
       relations: this.relations,
     });
 
-    return wishes.map((wish) => this.hidePrivateFields(wish));
+    return wishes.map((wish) => this.hidePrivateFields(wish, viewerId));
   }
 
   async findLast(): Promise<Wish[]> {
@@ -152,7 +160,7 @@ export class WishesService {
 
     await this.wishRepository.save(wish);
 
-    return this.findWish(id);
+    return this.findWish(id, userId);
   }
 
   async updateRaised(id: number, raised: number): Promise<void> {
@@ -160,7 +168,7 @@ export class WishesService {
   }
 
   async removeWish(id: number, userId: number): Promise<Wish> {
-    const wish = await this.findWish(id);
+    const wish = await this.findWish(id, userId);
 
     if (wish.owner.id !== userId) {
       throw new ForbiddenException('Нельзя удалять чужой подарок');
@@ -171,11 +179,29 @@ export class WishesService {
     return wish;
   }
 
-  async getCopy(id: number): Promise<Wish> {
-    await this.findWish(id);
+  async getCopy(id: number, user: User): Promise<Wish> {
+    const wish = await this.findWish(id, user.id);
+    const owner = await this.usersService.findUserByFilter({ id: user.id });
+
+    if (!owner) {
+      throw new NotFoundException(`Пользователь с id ${user.id} не найден`);
+    }
+
+    const copiedWish = this.wishRepository.create({
+      name: wish.name,
+      link: wish.link,
+      image: wish.image,
+      price: wish.price,
+      raised: 0,
+      description: wish.description,
+      copied: 0,
+      owner,
+    });
+
+    await this.wishRepository.save(copiedWish);
 
     await this.wishRepository.increment({ id }, 'copied', 1);
 
-    return this.findWish(id);
+    return this.findWish(copiedWish.id, user.id);
   }
 }

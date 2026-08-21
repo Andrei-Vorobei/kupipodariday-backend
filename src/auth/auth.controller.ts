@@ -7,9 +7,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { LocalGuard } from './local.guard';
-import { AuthService } from './auth.service';
+import { AuthService, AuthenticatedUser } from './auth.service';
 import { UsersService } from '../users/users.service';
-import { User } from '../users/entities/user.entity';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { SigninUserDto } from './dto/signin-user.dto';
 
@@ -22,7 +21,10 @@ export class AuthController {
 
   @UseGuards(LocalGuard)
   @Post('signin')
-  async signin(@Body() _dto: SigninUserDto, @Req() req: { user: User }) {
+  async signin(
+    @Body() _dto: SigninUserDto,
+    @Req() req: { user: AuthenticatedUser },
+  ) {
     return this.authService.auth(req.user.id);
   }
 

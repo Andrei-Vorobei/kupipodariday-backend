@@ -16,6 +16,7 @@ import {
 import { Wish } from '../../wishes/entities/wish.entity';
 import { Offer } from '../../offers/entities/offer.entity';
 import { Wishlist } from '../../wishlists/entities/wishlist.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity('users')
 export class User {
@@ -23,6 +24,7 @@ export class User {
   id: number;
 
   @Column({ unique: true, nullable: true })
+  @Exclude()
   yandexId: string | null;
 
   @Column({ unique: true })
@@ -49,6 +51,7 @@ export class User {
   email: string;
 
   @Column({ type: 'varchar' })
+  @Exclude()
   password: string;
 
   @CreateDateColumn()

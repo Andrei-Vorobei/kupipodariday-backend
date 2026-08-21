@@ -56,17 +56,25 @@ export class UsersController {
   @UseGuards(JwtGuard)
   @Get('me/wishes')
   async findOwnWishes(@Req() req: AuthenticatedRequest) {
-    return this.wishesService.findWishesByOwnerId(req.user.id);
+    return this.wishesService.findWishesByOwnerId(req.user.id, req.user.id);
   }
 
   @UseGuards(JwtGuard)
   @Get(':username/wishes')
-  async findUserWishes(@Param('username') username: string) {
-    const wishes = await this.wishesService.findWishesByOwnerUsername(username);
+  async findUserWishes(
+    @Param('username') username: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const user = await this.usersService.findUserByFilter({ username });
 
-    if (wishes.length === 0) {
-      throw new NotFoundException('Желания пользователя не найдены');
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
     }
+
+    const wishes = await this.wishesService.findWishesByOwnerUsername(
+      username,
+      req.user.id,
+    );
 
     return wishes;
   }

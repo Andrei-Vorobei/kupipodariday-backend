@@ -5,7 +5,7 @@ import { Profile } from 'passport-yandex';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 
-type PublicUser = Omit<User, 'password' | 'yandexId'>;
+export type AuthenticatedUser = Pick<User, 'id'>;
 
 @Injectable()
 export class AuthService {
@@ -14,7 +14,7 @@ export class AuthService {
     private readonly usersService: UsersService,
   ) {}
 
-  auth(id: number | string): { access_token: string } {
+  auth(id: number): { access_token: string } {
     return {
       access_token: this.jwtService.sign({
         sub: id,
@@ -25,7 +25,7 @@ export class AuthService {
   async validatePassword(
     username: string,
     password: string,
-  ): Promise<PublicUser> {
+  ): Promise<AuthenticatedUser> {
     const user = await this.usersService.findUserByFilter({ username });
 
     if (!user || !user.password) {
@@ -38,22 +38,16 @@ export class AuthService {
       throw new UnauthorizedException('Неверный логин или пароль');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password: unusedPassword, yandexId, ...publicUser } = user;
-
-    return publicUser;
+    return { id: user.id };
   }
 
-  async validateFromYandex(profile: Profile): Promise<PublicUser> {
+  async validateFromYandex(profile: Profile): Promise<AuthenticatedUser> {
     let user = await this.usersService.findByYandexID(profile.id);
 
     if (!user) {
       user = await this.usersService.createFromYandex(profile);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, yandexId, ...publicUser } = user;
-
-    return publicUser;
+    return { id: user.id };
   }
 }
