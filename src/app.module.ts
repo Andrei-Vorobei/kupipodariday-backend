@@ -1,5 +1,5 @@
 import { Inject, Logger, Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WINSTON_MODULE_PROVIDER, WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
@@ -36,15 +36,27 @@ import { ServerExceptionFilter } from './filter/server-exception.filter';
         }),
       ],
     }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'student',
-      password: 'student',
-      database: 'nest_project',
-      entities: [User, Wish, Wishlist, Offer],
-      synchronize: true,
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const port = Number(configService.getOrThrow<string>('DB_PORT'));
+
+        if (!Number.isInteger(port) || port < 1 || port > 65535) {
+          throw new Error('DB_PORT must be an integer between 1 and 65535');
+        }
+
+        return {
+          type: 'postgres' as const,
+          host: configService.getOrThrow<string>('DB_HOST'),
+          port,
+          username: configService.getOrThrow<string>('DB_USERNAME'),
+          password: configService.getOrThrow<string>('DB_PASSWORD'),
+          database: configService.getOrThrow<string>('DB_DATABASE'),
+          entities: [User, Wish, Wishlist, Offer],
+          synchronize: true,
+        };
+      },
     }),
     UsersModule,
     WishesModule,

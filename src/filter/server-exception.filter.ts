@@ -7,6 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Response } from 'express';
+import { QueryFailedError } from 'typeorm';
 
 @Catch()
 export class ServerExceptionFilter implements ExceptionFilter {
@@ -49,23 +50,24 @@ export class ServerExceptionFilter implements ExceptionFilter {
         `HTTP error in ${request.method} ${request.url}: ${status} ${message}`,
         exception,
       );
+    } else if (
+      exception instanceof QueryFailedError &&
+      exception.driverError?.code === '23505'
+    ) {
+      status = HttpStatus.CONFLICT;
+      message = 'Resource already exists';
+      errorCode = 'CONFLICT_DUPLICATE';
+
+      this.logger.error(
+        `Database error in ${request.method} ${request.url}: ${exception.message}`,
+        exception,
+      );
     } else if (exception instanceof Error) {
       const ex = exception;
-      const msg = ex.message.toLowerCase();
 
-      if (msg.includes('redirect') || msg.includes('oauth')) {
-        status = HttpStatus.UNAUTHORIZED;
-        message = 'Authentication failed or user cancelled login';
-        errorCode = 'AUTH_FAILED';
-      } else if (msg.includes('duplicate') || msg.includes('unique')) {
-        status = HttpStatus.CONFLICT;
-        message = 'Resource already exists';
-        errorCode = 'CONFLICT_DUPLICATE';
-      } else {
-        status = HttpStatus.INTERNAL_SERVER_ERROR;
-        message = ex.message || 'Internal server error';
-        errorCode = 'INTERNAL_ERROR';
-      }
+      status = HttpStatus.INTERNAL_SERVER_ERROR;
+      message = ex.message || 'Internal server error';
+      errorCode = 'INTERNAL_ERROR';
 
       this.logger.error(
         `System error in ${request.method} ${request.url}: ${ex.message}`,

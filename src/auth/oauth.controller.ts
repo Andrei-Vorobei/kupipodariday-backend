@@ -6,8 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { AuthService } from './auth.service';
-import { Profile } from 'passport-yandex';
+import { AuthService, AuthenticatedUser } from './auth.service';
 import { YandexGuard } from './yandex.guard';
 
 @Controller('oauth')
@@ -22,7 +21,7 @@ export class OAuthController {
 
   @UseGuards(YandexGuard)
   @Get('yandex/callback')
-  async yandexCallback(@Req() req: Request & { user?: Profile }) {
+  async yandexCallback(@Req() req: Request & { user?: AuthenticatedUser }) {
     if (!req.user) {
       throw new UnauthorizedException(
         'Не удалось получить данные пользователя от Яндекса',
