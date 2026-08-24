@@ -15,6 +15,13 @@
       "problemMatcher": [],
       "label": "npm: build",
       "detail": "nest build"
+    },
+    {
+      "type": "npm",
+      "script": "lint:fix",
+      "problemMatcher": [],
+      "label": "npm: lint:fix",
+      "detail": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
     }
   ]
 }
